@@ -1,14 +1,1378 @@
+
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#09090b" />
-    <meta name="description" content="AFTERSHOCK — counterfactual systems simulation." />
-    <title>AFTERSHOCK // Systems Simulation</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#09090b">
+  <meta name="description" content="AFTERSHOCK — counterfactual systems simulation.">
+  <title>AFTERSHOCK // Systems Simulation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      font-family: 'Space Grotesk', sans-serif;
+      color: #ecebed;
+      background: #09090b;
+      --bg: #09090b;
+      --panel: #101013;
+      --line: #29292f;
+      --muted: #777780;
+      --red: #ff303b;
+      --mono: 'IBM Plex Mono', monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      background: radial-gradient(ellipse at 50% -25%, #241013 0%, transparent 45%), var(--bg);
+    }
+
+    button, select, input { font: inherit; }
+    button { cursor: pointer; }
+
+    .app-shell {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 0 42px 24px;
+    }
+
+    .topbar {
+      height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #242428;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .08em;
+    }
+
+    .brand {
+      color: #f3f0f1;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: .13em;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      color: var(--red);
+      width: 29px;
+      height: 29px;
+      border: 1px solid #572027;
+      background: #1a0e11;
+    }
+
+    .brand-slash { color: var(--red); }
+
+    .topbar-center {
+      color: #99989f;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .live-dot, .trace-pulse {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #7acb8a;
+      box-shadow: 0 0 9px #7acb8a;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 17px;
+      color: #85848c;
+    }
+
+    .avatar {
+      width: 27px;
+      height: 27px;
+      display: grid;
+      place-items: center;
+      color: #ff858b;
+      border: 1px solid #633039;
+      background: #211014;
+      border-radius: 50%;
+    }
+
+    .intro {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding: 48px 0 31px;
+    }
+
+    .eyebrow, .section-index {
+      color: var(--red);
+      font: 10px var(--mono);
+      letter-spacing: .12em;
+    }
+
+    .eyebrow span { color: #777780; }
+
+    h1 {
+      font-size: clamp(34px, 4.3vw, 59px);
+      letter-spacing: -.055em;
+      line-height: 1.04;
+      margin: 15px 0 12px;
+      font-weight: 600;
+    }
+
+    h1 em {
+      color: #ff555e;
+      font-style: normal;
+    }
+
+    .intro-copy {
+      color: #929199;
+      font-size: 13px;
+      margin: 0;
+    }
+
+    .intro-stamp {
+      width: 150px;
+      border: 1px solid #383036;
+      padding: 13px;
+      color: #77727a;
+      font: 9px var(--mono);
+      letter-spacing: .1em;
+      transform: rotate(-3deg);
+    }
+
+    .intro-stamp span {
+      color: var(--red);
+      display: block;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .intro-stamp strong {
+      color: #c8c2c5;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .intro-stamp small {
+      display: block;
+      border-top: 1px solid #393036;
+      margin-top: 9px;
+      padding-top: 8px;
+      font-size: 7px;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .metric-card, .panel {
+      background: linear-gradient(145deg, #121215, #0f0f12);
+      border: 1px solid var(--line);
+    }
+
+    .metric-card {
+      min-height: 103px;
+      padding: 14px 17px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .metric-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #8c8b93;
+      font: 9px var(--mono);
+      letter-spacing: .08em;
+    }
+
+    .metric-card > strong {
+      font: 27px var(--mono);
+      margin-top: 7px;
+      letter-spacing: -.06em;
+    }
+
+    .metric-card > small {
+      color: #66656d;
+      font: 8px var(--mono);
+      margin-top: 2px;
+      letter-spacing: .08em;
+    }
+
+    .metric-danger { color: #ff555e; }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      gap: 15px;
+      align-items: start;
+    }
+
+    .panel {
+      padding: 18px;
+      min-width: 0;
+    }
+
+    .control-panel {
+      position: sticky;
+      top: 12px;
+    }
+
+    .panel-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .panel-heading h2 {
+      font-size: 15px;
+      font-weight: 500;
+      margin: 5px 0 0;
+      letter-spacing: -.02em;
+    }
+
+    .panel-icon {
+      color: var(--red);
+      border: 1px solid #48232a;
+      background: #1b1013;
+      padding: 7px;
+    }
+
+    .panel-description {
+      color: #85848d;
+      font-size: 11px;
+      line-height: 1.6;
+      margin: 14px 0 20px;
+    }
+
+    .field-label {
+      display: block;
+      color: #aaa8b0;
+      font: 9px var(--mono);
+      letter-spacing: .1em;
+      margin: 16px 0 8px;
+    }
+
+    select {
+      appearance: none;
+      width: 100%;
+      color: #e5e2e5;
+      background: #17171b;
+      border: 1px solid #333239;
+      padding: 10px 11px;
+      border-radius: 2px;
+      font-size: 11px;
+      outline: none;
+    }
+
+    select:focus, button:focus-visible, input:focus-visible {
+      outline: 1px solid var(--red);
+      outline-offset: 2px;
+    }
+
+    .range-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .range-heading output {
+      font: 12px var(--mono);
+      color: #f1eeee;
+    }
+
+    .range-heading output small {
+      color: #777780;
+      font-size: 9px;
+    }
+
+    input[type=range] {
+      width: 100%;
+      accent-color: var(--red);
+      margin: 5px 0 2px;
+    }
+
+    .helper-text {
+      color: #686770;
+      font-size: 9px;
+      line-height: 1.5;
+      margin: 5px 0 16px;
+    }
+
+    .primary-button, .secondary-button {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      padding: 12px;
+      font: 10px var(--mono);
+      letter-spacing: .07em;
+      border-radius: 2px;
+    }
+
+    .primary-button {
+      border: 1px solid #ff4650;
+      background: #e92734;
+      color: white;
+      font-weight: 700;
+      box-shadow: 0 5px 18px #e9273422;
+    }
+
+    .primary-button:hover { background: #ff3d48; }
+
+    .secondary-button {
+      background: transparent;
+      color: #99979f;
+      border: 1px solid #34333a;
+      margin-top: 8px;
+      font-size: 8px;
+    }
+
+    .secondary-button:hover {
+      color: white;
+      border-color: #66636c;
+    }
+
+    .sandbox-note {
+      display: flex;
+      gap: 10px;
+      border-top: 1px solid #29282e;
+      margin-top: 20px;
+      padding-top: 15px;
+      color: #6f9d7c;
+      font-size: 9px;
+      line-height: 1.6;
+    }
+
+    .sandbox-note strong {
+      font: 9px var(--mono);
+      color: #8dc49a;
+      letter-spacing: .07em;
+    }
+
+    .main-column {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .graph-panel { padding-bottom: 12px; }
+
+    .graph-heading { align-items: center; }
+
+    .graph-legend {
+      display: flex;
+      gap: 13px;
+      flex-wrap: wrap;
+      color: #777680;
+      font: 8px var(--mono);
+    }
+
+    .graph-legend span {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .graph-legend i {
+      width: 6px;
+      height: 6px;
+      display: inline-block;
+      border-radius: 50%;
+    }
+
+    .legend-normal { background: #66656e; }
+    .legend-affected { background: #e5a14a; }
+    .legend-critical { background: var(--red); }
+
+    .graph-wrap {
+      width: 100%;
+      overflow-x: auto;
+      margin-top: 13px;
+      background-image: radial-gradient(#29282e .7px, transparent .7px);
+      background-size: 17px 17px;
+      border: 1px solid #242329;
+    }
+
+    .network-svg {
+      width: 100%;
+      min-width: 720px;
+      display: block;
+    }
+
+    .edge {
+      stroke: #55545d;
+      stroke-width: 1.2;
+      opacity: .75;
+    }
+
+    .edge-hot {
+      stroke: var(--red);
+      stroke-width: 1.8;
+      opacity: .95;
+    }
+
+    .edge-label {
+      fill: #777680;
+      font: 8px var(--mono);
+      text-anchor: middle;
+    }
+
+    .graph-node {
+      cursor: pointer;
+      outline: none;
+    }
+
+    .graph-node rect {
+      fill: #17171c;
+      stroke: #55545e;
+      stroke-width: 1;
+      transition: .15s;
+    }
+
+    .graph-node circle { fill: #8b8992; }
+
+    .graph-node text {
+      fill: #e4e1e5;
+      font: 8px var(--mono);
+      letter-spacing: .02em;
+    }
+
+    .graph-node .node-meta {
+      fill: #85838d;
+      font-size: 7px;
+    }
+
+    .graph-node.affected rect {
+      stroke: #d59a4e;
+      fill: #211b15;
+    }
+
+    .graph-node.affected circle { fill: #e5a14a; }
+
+    .graph-node.critical rect {
+      stroke: var(--red);
+      fill: #261216;
+    }
+
+    .graph-node.critical circle { fill: var(--red); }
+
+    .graph-node.selected rect {
+      stroke-width: 2;
+      filter: drop-shadow(0 0 5px #ff303b66);
+    }
+
+    .graph-node:focus rect { stroke: white; }
+
+    .graph-footer {
+      display: flex;
+      justify-content: space-between;
+      color: #686770;
+      font: 8px var(--mono);
+      letter-spacing: .08em;
+      padding-top: 10px;
+    }
+
+    .lower-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .impact-panel, .detail-panel { min-height: 200px; }
+
+    .muted-icon { color: #777680; }
+
+    .impact-list {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      margin-top: 18px;
+    }
+
+    .impact-row {
+      display: grid;
+      grid-template-columns: 112px minmax(30px, 1fr) 24px;
+      align-items: center;
+      gap: 8px;
+      border: 0;
+      background: transparent;
+      padding: 2px;
+      color: #b6b3bb;
+      text-align: left;
+      width: 100%;
+    }
+
+    .impact-row.active .impact-name { color: #fff; }
+
+    .impact-name {
+      font: 8px var(--mono);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .impact-track {
+      height: 4px;
+      background: #29282e;
+    }
+
+    .impact-track i {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, #a82a34, #ff4650);
+    }
+
+    .impact-row strong {
+      font: 9px var(--mono);
+      text-align: right;
+      color: #d6d2d8;
+    }
+
+    .footnote {
+      color: #66656e;
+      font-size: 9px;
+      margin: 13px 0 0;
+      line-height: 1.5;
+    }
+
+    .node-type, .trace-count {
+      color: #9d858a;
+      border: 1px solid #4a2b30;
+      background: #1b1114;
+      padding: 5px 7px;
+      font: 8px var(--mono);
+      text-transform: uppercase;
+    }
+
+    .detail-panel h3 {
+      font: 17px var(--mono);
+      letter-spacing: -.04em;
+      margin: 19px 0 5px;
+    }
+
+    .detail-description {
+      color: #85838c;
+      font-size: 10px;
+      margin: 0;
+    }
+
+    .detail-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border-top: 1px solid #29282e;
+      margin-top: 18px;
+      padding-top: 13px;
+      gap: 5px;
+    }
+
+    .detail-stats div {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .detail-stats small {
+      color: #6f6e77;
+      font: 7px var(--mono);
+    }
+
+    .detail-stats strong { font: 15px var(--mono); }
+    .red-text { color: #ff555e; }
+
+    .trace-panel { padding-bottom: 14px; }
+
+    .trace-summary {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-top: 17px;
+      padding: 10px;
+      background: #191316;
+      border: 1px solid #392127;
+      font: 9px var(--mono);
+    }
+
+    .trace-pulse {
+      background: var(--red);
+      box-shadow: 0 0 9px var(--red);
+    }
+
+    .trace-summary strong {
+      color: #e8dfe1;
+      font-weight: 500;
+    }
+
+    .trace-summary > span:last-child {
+      color: #827d85;
+      margin-left: auto;
+      font-size: 8px;
+    }
+
+    .trace-list {
+      list-style: none;
+      margin: 12px 0 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .trace-list li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #aaa7af;
+      font: 9px var(--mono);
+    }
+
+    .trace-list li span {
+      color: var(--red);
+      font-size: 8px;
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      padding: 20px 0 0;
+      color: #65646c;
+      font: 8px var(--mono);
+      letter-spacing: .07em;
+    }
+
+    .footer b {
+      color: var(--red);
+      font-weight: 400;
+    }
+
+    @media(max-width:1050px) {
+      .app-shell { padding: 0 22px 20px; }
+      .workspace { grid-template-columns: 245px minmax(0, 1fr); }
+      .graph-legend { gap: 7px; }
+      .graph-legend span { font-size: 7px; }
+    }
+
+    @media(max-width:760px) {
+      .app-shell { padding: 0 14px 18px; }
+      .topbar-center, .version, .intro-stamp { display: none; }
+      .intro { padding: 35px 0 24px; }
+      .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+      .workspace { grid-template-columns: 1fr; }
+      .control-panel { position: static; }
+      .lower-grid { grid-template-columns: 1fr; }
+      .graph-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .footer {
+        gap: 10px;
+        flex-direction: column;
+      }
+      .trace-summary { flex-wrap: wrap; }
+      .trace-summary > span:last-child {
+        margin-left: 0;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<main class="app-shell">
+
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="AFTERSHOCK home">
+      <span class="brand-mark">⌁</span>
+      <span>AFTERSHOCK<span class="brand-slash"> //</span></span>
+    </a>
+    <div class="topbar-center">
+      <span class="live-dot"></span>
+      LOCAL SIMULATION ENVIRONMENT
+    </div>
+    <div class="topbar-right">
+      <span class="version">ENGINE 0.1.0</span>
+      <span class="avatar">AS</span>
+    </div>
+  </header>
+
+  <section class="intro">
+    <div>
+      <div class="eyebrow">COUNTERFACTUAL SYSTEMS SIMULATION <span>/ 001</span></div>
+      <h1>Explore the consequences<br><em>before they happen.</em></h1>
+      <p class="intro-copy">
+        Introduce a hypothetical event. Trace its propagation. Inspect the systems it could affect.
+      </p>
+    </div>
+    <div class="intro-stamp">
+      <span>AFTERSHOCK</span>
+      <strong>SIMULATION<br>LABORATORY</strong>
+      <small>READ-ONLY / SANDBOX</small>
+    </div>
+  </section>
+
+  <section class="metrics-grid" aria-label="Simulation metrics">
+    <div class="metric-card">
+      <div class="metric-top">⑂ <span>SYSTEM COMPONENTS</span></div>
+      <strong id="metric-nodes">08</strong>
+      <small>CONNECTED NODES</small>
+    </div>
+    <div class="metric-card">
+      <div class="metric-top">⌁ <span>DEPENDENCY LINKS</span></div>
+      <strong id="metric-edges">10</strong>
+      <small>DIRECTED EDGES</small>
+    </div>
+    <div class="metric-card">
+      <div class="metric-top">⚠ <span>AFFECTED COMPONENTS</span></div>
+      <strong id="metric-affected" class="metric-danger">00</strong>
+      <small>DOWNSTREAM EXPOSURE</small>
+    </div>
+    <div class="metric-card">
+      <div class="metric-top">◉ <span>AGGREGATE IMPACT</span></div>
+      <strong id="metric-total">0.0</strong>
+      <small>RELATIVE SCORE / 100</small>
+    </div>
+  </section>
+
+  <div class="workspace">
+
+    <aside class="control-panel panel">
+      <div class="panel-heading">
+        <div>
+          <span class="section-index">01 / SCENARIO</span>
+          <h2>Event configuration</h2>
+        </div>
+        <span class="panel-icon">⌁</span>
+      </div>
+
+      <p class="panel-description">
+        Define a hypothetical disruption and observe how it propagates through the reference system.
+      </p>
+
+      <label class="field-label" for="event-kind">EVENT TYPE</label>
+      <select id="event-kind">
+        <option value="outage">Service outage</option>
+        <option value="degradation">Performance degradation</option>
+        <option value="delay">Process delay</option>
+      </select>
+
+      <label class="field-label" for="source-node">ORIGIN COMPONENT</label>
+      <select id="source-node"></select>
+
+      <div class="range-heading">
+        <label class="field-label" for="impact">INITIAL IMPACT</label>
+        <output id="impact-output">100<small> / 100</small></output>
+      </div>
+      <input id="impact" type="range" min="10" max="100" step="5" value="100">
+
+      <div class="range-heading">
+        <label class="field-label" for="decay">PROPAGATION DECAY</label>
+        <output id="decay-output">88<small>%</small></output>
+      </div>
+      <input id="decay" type="range" min="20" max="100" step="4" value="88">
+
+      <p class="helper-text">
+        Lower decay reduces impact as it moves across each dependency.
+      </p>
+
+      <button class="primary-button" id="run">▶ RUN SIMULATION</button>
+      <button class="secondary-button" id="reset">↺ RESET TO BASELINE SCENARIO</button>
+
+      <div class="sandbox-note">
+        <span>▣</span>
+        <span>
+          <strong>ISOLATED SANDBOX</strong><br>
+          No connected systems are modified.
+        </span>
+      </div>
+    </aside>
+
+    <section class="main-column">
+
+      <div class="panel graph-panel">
+        <div class="panel-heading graph-heading">
+          <div>
+            <span class="section-index">02 / SYSTEM TOPOLOGY</span>
+            <h2>Dependency network</h2>
+          </div>
+          <div class="graph-legend">
+            <span><i class="legend-normal"></i>NORMAL</span>
+            <span><i class="legend-affected"></i>AFFECTED</span>
+            <span><i class="legend-critical"></i>HIGH IMPACT</span>
+          </div>
+        </div>
+
+        <div class="graph-wrap">
+          <svg id="network" class="network-svg" viewBox="0 0 1060 440"
+            role="img" aria-label="Interactive system dependency graph"></svg>
+        </div>
+
+        <div class="graph-footer">
+          <span>REFERENCE TOPOLOGY / COMMERCE PLATFORM</span>
+          <span>SELECT A NODE TO INSPECT</span>
+        </div>
+      </div>
+
+      <div class="lower-grid">
+
+        <section class="panel impact-panel">
+          <div class="panel-heading">
+            <div>
+              <span class="section-index">03 / EXPOSURE</span>
+              <h2>Impact distribution</h2>
+            </div>
+            <span class="muted-icon">↘</span>
+          </div>
+
+          <div class="impact-list" id="impact-list"></div>
+          <p class="footnote">
+            Scores represent modeled exposure, not probability of failure.
+          </p>
+        </section>
+
+        <section class="panel detail-panel">
+          <div class="panel-heading">
+            <div>
+              <span class="section-index">04 / COMPONENT INSPECTOR</span>
+              <h2>Selected node</h2>
+            </div>
+            <span class="node-type" id="node-type">SERVICE</span>
+          </div>
+
+          <h3 id="node-label">PAYMENTS</h3>
+          <p class="detail-description" id="node-description"></p>
+
+          <div class="detail-stats">
+            <div>
+              <small>CRITICALITY</small>
+              <strong id="node-criticality">95%</strong>
+            </div>
+            <div>
+              <small>SIMULATED IMPACT</small>
+              <strong id="node-impact">100.0</strong>
+            </div>
+            <div>
+              <small>PROPAGATION DEPTH</small>
+              <strong id="node-depth">0</strong>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <section class="panel trace-panel">
+        <div class="panel-heading">
+          <div>
+            <span class="section-index">05 / EVENT TRACE</span>
+            <h2>Propagation sequence</h2>
+          </div>
+          <span class="trace-count" id="trace-count">0 EVENTS</span>
+        </div>
+
+        <div class="trace-summary">
+          <span class="trace-pulse"></span>
+          <strong id="trace-title">Payment provider outage</strong>
+          <span id="trace-origin">ORIGIN: PAYMENTS</span>
+        </div>
+
+        <ol class="trace-list" id="trace-list"></ol>
+      </section>
+
+    </section>
+  </div>
+
+  <footer class="footer">
+    <span>AFTERSHOCK <b>/</b> COUNTERFACTUAL SYSTEMS SIMULATION</span>
+    <span>DETERMINISTIC MODEL <b>·</b> LOCAL DATA <b>·</b> SCENARIO READY</span>
+  </footer>
+
+</main>
+
+<script>
+(() => {
+  "use strict";
+
+  const nodes = [
+    {
+      id: "gateway",
+      label: "API GATEWAY",
+      kind: "service",
+      description: "Public request entry point",
+      x: 90, y: 190,
+      criticality: .95
+    },
+    {
+      id: "identity",
+      label: "IDENTITY",
+      kind: "service",
+      description: "Authentication and access",
+      x: 300, y: 75,
+      criticality: .9
+    },
+    {
+      id: "catalog",
+      label: "CATALOG",
+      kind: "service",
+      description: "Product and inventory reads",
+      x: 300, y: 190,
+      criticality: .75
+    },
+    {
+      id: "orders",
+      label: "ORDER SERVICE",
+      kind: "service",
+      description: "Order orchestration",
+      x: 520, y: 190,
+      criticality: 1
+    },
+    {
+      id: "payments",
+      label: "PAYMENTS",
+      kind: "service",
+      description: "Payment authorization",
+      x: 740, y: 75,
+      criticality: .95
+    },
+    {
+      id: "inventory",
+      label: "INVENTORY DB",
+      kind: "database",
+      description: "Stock and reservation records",
+      x: 740, y: 300,
+      criticality: .85
+    },
+    {
+      id: "fulfillment",
+      label: "FULFILLMENT",
+      kind: "process",
+      description: "Warehouse dispatch workflow",
+      x: 950, y: 190,
+      criticality: .8
+    },
+    {
+      id: "operations",
+      label: "OPERATIONS",
+      kind: "team",
+      description: "Incident response and service ownership",
+      x: 520, y: 370,
+      criticality: .65
+    }
+  ];
+
+  const edges = [
+    {from:"gateway",to:"identity",sensitivity:.9,label:"auth"},
+    {from:"gateway",to:"catalog",sensitivity:.8,label:"routes"},
+    {from:"identity",to:"orders",sensitivity:.8,label:"identity check"},
+    {from:"catalog",to:"orders",sensitivity:.65,label:"product data"},
+    {from:"orders",to:"payments",sensitivity:.95,label:"authorize"},
+    {from:"orders",to:"inventory",sensitivity:.85,label:"reserve stock"},
+    {from:"payments",to:"fulfillment",sensitivity:.8,label:"payment confirmed"},
+    {from:"inventory",to:"fulfillment",sensitivity:.9,label:"stock allocated"},
+    {from:"orders",to:"operations",sensitivity:.55,label:"alerts"},
+    {from:"operations",to:"gateway",sensitivity:.2,label:"manual recovery"}
+  ];
+
+  const initial = {
+    kind: "outage",
+    sourceNodeId: "payments",
+    initialImpact: 100,
+    decay: .88,
+    title: "Payment provider outage"
+  };
+
+  const $ = id => document.getElementById(id);
+
+  let selectedNodeId = initial.sourceNodeId;
+  let result;
+
+  const nodeById = id => nodes.find(n => n.id === id);
+
+  // Deterministic graph-based propagation engine.
+  function simulate(event) {
+    if (!nodeById(event.sourceNodeId)) {
+      throw new Error("Unknown event source node.");
+    }
+
+    const impacts = {
+      [event.sourceNodeId]: {
+        nodeId: event.sourceNodeId,
+        score: event.initialImpact,
+        predecessorId: null,
+        depth: 0
+      }
+    };
+
+    const outgoing = new Map();
+
+    edges.forEach(edge => {
+      outgoing.set(edge.from, [
+        ...(outgoing.get(edge.from) || []),
+        edge
+      ]);
+    });
+
+    const queue = [event.sourceNodeId];
+
+    const trace = [
+      `${event.sourceNodeId} receives initial impact ${event.initialImpact.toFixed(0)}.`
+    ];
+
+    while (queue.length) {
+      const currentId = queue.shift();
+      const current = impacts[currentId];
+
+      for (const edge of outgoing.get(currentId) || []) {
+        const candidate =
+          current.score * edge.sensitivity * event.decay;
+
+        const previous = impacts[edge.to];
+
+        if (
+          candidate <= .01 ||
+          (previous && candidate <= previous.score + .01)
+        ) {
+          continue;
+        }
+
+        impacts[edge.to] = {
+          nodeId: edge.to,
+          score: Math.min(100, candidate),
+          predecessorId: currentId,
+          depth: current.depth + 1
+        };
+
+        trace.push(
+          `${currentId} → ${edge.to}: ${candidate.toFixed(1)} impact.`
+        );
+
+        queue.push(edge.to);
+      }
+    }
+
+    const affectedNodeIds = Object.keys(impacts)
+      .filter(id => id !== event.sourceNodeId);
+
+    return {
+      event,
+      impacts,
+      affectedNodeIds,
+      trace,
+      totalImpact: Object.values(impacts)
+        .reduce((sum, item) => sum + item.score, 0),
+      maxDepth: Math.max(
+        0,
+        ...Object.values(impacts).map(item => item.depth)
+      )
+    };
+  }
+
+  // Interactive SVG dependency network.
+  function renderGraph() {
+    const svg = $("network");
+    const ns = "http://www.w3.org/2000/svg";
+    const impact = result.impacts;
+
+    const el = (tag, attrs = {}, parent = svg) => {
+      const element = document.createElementNS(ns, tag);
+
+      Object.entries(attrs).forEach(([key, value]) => {
+        element.setAttribute(key, value);
+      });
+
+      parent.appendChild(element);
+      return element;
+    };
+
+    svg.innerHTML = "";
+
+    const defs = el("defs");
+
+    [
+      ["arrow", "#55545d"],
+      ["arrow-hot", "#ff303b"]
+    ].forEach(([id, color]) => {
+      const marker = el("marker", {
+        id,
+        markerWidth: 8,
+        markerHeight: 8,
+        refX: 6,
+        refY: 3,
+        orient: "auto"
+      }, defs);
+
+      el("path", {
+        d: "M0,0 L0,6 L7,3 z",
+        fill: color
+      }, marker);
+    });
+
+    edges.forEach(edge => {
+      const a = nodeById(edge.from);
+      const b = nodeById(edge.to);
+      const hot = Boolean(impact[edge.from] || impact[edge.to]);
+      const group = el("g");
+
+      el("line", {
+        x1: a.x + 58,
+        y1: a.y + 18,
+        x2: b.x + 58,
+        y2: b.y + 18,
+        class: hot ? "edge edge-hot" : "edge",
+        "marker-end": hot ? "url(#arrow-hot)" : "url(#arrow)"
+      }, group);
+
+      const label = el("text", {
+        x: (a.x + b.x) / 2 + 58,
+        y: (a.y + b.y) / 2 + 12,
+        class: "edge-label"
+      }, group);
+
+      label.textContent = edge.label;
+    });
+
+    nodes.forEach(node => {
+      const score = impact[node.id]?.score || 0;
+
+      const status =
+        score >= 65 ? "critical" :
+        score > 0 ? "affected" :
+        "normal";
+
+      const group = el("g", {
+        transform: `translate(${node.x},${node.y})`,
+        class: `graph-node ${status} ${
+          selectedNodeId === node.id ? "selected" : ""
+        }`,
+        tabindex: "0",
+        role: "button",
+        "aria-label": `${node.label}, impact ${score.toFixed(0)}`
+      });
+
+      el("rect", {
+        width: 116,
+        height: 42,
+        rx: 5
+      }, group);
+
+      el("circle", {
+        cx: 12,
+        cy: 13,
+        r: 3
+      }, group);
+
+      const label = el("text", {
+        x: 22,
+        y: 17
+      }, group);
+
+      label.textContent = node.label;
+
+      const meta = el("text", {
+        x: 10,
+        y: 32,
+        class: "node-meta"
+      }, group);
+
+      meta.textContent = score > 0
+        ? `IMPACT ${score.toFixed(0)} / 100`
+        : node.kind.toUpperCase();
+
+      group.addEventListener("click", () => {
+        selectedNodeId = node.id;
+        render();
+      });
+
+      group.addEventListener("keydown", event => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          selectedNodeId = node.id;
+          render();
+        }
+      });
+    });
+  }
+
+  // Refresh all interface elements from simulation state.
+  function render() {
+    $("metric-nodes").textContent =
+      String(nodes.length).padStart(2, "0");
+
+    $("metric-edges").textContent =
+      String(edges.length).padStart(2, "0");
+
+    $("metric-affected").textContent =
+      String(result.affectedNodeIds.length).padStart(2, "0");
+
+    $("metric-total").textContent =
+      result.totalImpact.toFixed(1);
+
+    renderGraph();
+
+    const ranked = Object.values(result.impacts)
+      .sort((a, b) => b.score - a.score);
+
+    $("impact-list").innerHTML = ranked
+      .slice(0, 6)
+      .map(item => {
+        const node = nodeById(item.nodeId);
+
+        return `
+          <button class="impact-row ${
+            selectedNodeId === node.id ? "active" : ""
+          }" data-node="${node.id}">
+            <span class="impact-name">${node.label}</span>
+            <span class="impact-track">
+              <i style="width:${item.score}%"></i>
+            </span>
+            <strong>${item.score.toFixed(0)}</strong>
+          </button>
+        `;
+      })
+      .join("");
+
+    document.querySelectorAll(".impact-row").forEach(button => {
+      button.addEventListener("click", () => {
+        selectedNodeId = button.dataset.node;
+        render();
+      });
+    });
+
+    const selected = nodeById(selectedNodeId);
+    const selectedImpact = result.impacts[selectedNodeId];
+
+    $("node-type").textContent = selected.kind;
+    $("node-label").textContent = selected.label;
+    $("node-description").textContent = selected.description;
+
+    $("node-criticality").textContent =
+      `${Math.round(selected.criticality * 100)}%`;
+
+    $("node-impact").textContent =
+      (selectedImpact?.score ?? 0).toFixed(1);
+
+    $("node-impact").className =
+      selectedImpact ? "red-text" : "";
+
+    $("node-depth").textContent =
+      selectedImpact?.depth ?? "—";
+
+    $("trace-title").textContent = result.event.title;
+
+    $("trace-origin").textContent =
+      `ORIGIN: ${nodeById(result.event.sourceNodeId).label}`;
+
+    $("trace-count").textContent =
+      `${result.trace.length} EVENTS`;
+
+    $("trace-list").innerHTML = result.trace
+      .slice(0, 7)
+      .map((line, index) => `
+        <li>
+          <span>${String(index + 1).padStart(2, "0")}</span>
+          ${line}
+        </li>
+      `)
+      .join("");
+
+    const oldNote = $("trace-list").nextElementSibling;
+
+    if (oldNote?.classList.contains("footnote")) {
+      oldNote.remove();
+    }
+
+    if (result.trace.length > 7) {
+      $("trace-list").insertAdjacentHTML(
+        "afterend",
+        `<p class="footnote">
+          Showing first 7 propagation steps of ${result.trace.length}.
+        </p>`
+      );
+    }
+  }
+
+  // Populate origin selector.
+  nodes.forEach(node => {
+    $("source-node").add(
+      new Option(node.label, node.id)
+    );
+  });
+
+  // Run a user-defined scenario.
+  function run() {
+    const kind = $("event-kind").value;
+    const sourceNodeId = $("source-node").value;
+
+    const labels = {
+      outage: "SERVICE OUTAGE",
+      degradation: "PERFORMANCE DEGRADATION",
+      delay: "PROCESS DELAY"
+    };
+
+    result = simulate({
+      kind,
+      sourceNodeId,
+      initialImpact: Number($("impact").value),
+      decay: Number($("decay").value) / 100,
+      title: `${labels[kind]} at ${nodeById(sourceNodeId).label}`
+    });
+
+    selectedNodeId = sourceNodeId;
+    render();
+  }
+
+  // Live range values.
+  $("impact").addEventListener("input", event => {
+    $("impact-output").innerHTML =
+      `${event.target.value}<small> / 100</small>`;
+  });
+
+  $("decay").addEventListener("input", event => {
+    $("decay-output").innerHTML =
+      `${event.target.value}<small>%</small>`;
+  });
+
+  $("run").addEventListener("click", run);
+
+  // Restore the initial scenario.
+  $("reset").addEventListener("click", () => {
+    $("event-kind").value = initial.kind;
+    $("source-node").value = initial.sourceNodeId;
+    $("impact").value = initial.initialImpact;
+    $("decay").value = 88;
+
+    $("impact-output").innerHTML =
+      '100<small> / 100</small>';
+
+    $("decay-output").innerHTML =
+      '88<small>%</small>';
+
+    result = simulate(initial);
+    selectedNodeId = initial.sourceNodeId;
+    render();
+  });
+
+  // Initial application state.
+  result = simulate(initial);
+  render();
+
+})();
+</script>
+
+</body>
 </html>
